@@ -15,7 +15,6 @@ const db = admin.firestore();
 
 
 // -------------------- 1) Get Available Slots --------------------
-// GET /getAvailableSlots?placeId=...&branchId=...&date=YYYY-MM-DD
 
 export const getAvailableSlots = functions.https.onRequest(async (req, res) => {
   res.set("Access-Control-Allow-Origin", "*");
@@ -86,22 +85,6 @@ export const getAvailableSlots = functions.https.onRequest(async (req, res) => {
 
 
 // -------------------- 2) Checkout (Create Booking) --------------------
-// POST /checkout
-// body:
-// {
-//   "user_id": "USER_123",
-//   "items": [
-//     {
-//       "type": "room" | "game" | "place",
-//       "branch_id": "BRANCH_XXX",
-//       "place_id": "ROOM_OR_GAME_ID",
-//       "date": "2025-11-23",
-//       "start_time": "12:00",
-//       "end_time": "14:00",
-//       "people_count": 4
-//     }
-//   ]
-// }
 
 export const checkout = functions.https.onRequest(async (req, res) => {
   res.set("Access-Control-Allow-Origin", "*");
@@ -172,7 +155,6 @@ export const checkout = functions.https.onRequest(async (req, res) => {
 
 
 // -------------------- 3) Get My Bookings --------------------
-// GET /getMyBookings?userId=USER_123
 
 export const getMyBookings = functions.https.onRequest(async (req, res) => {
   res.set("Access-Control-Allow-Origin", "*");
@@ -216,14 +198,6 @@ export const getMyBookings = functions.https.onRequest(async (req, res) => {
 
 
 // =====================[ DATA APIs – Mariam ]=====================
-// مسئولة عن:
-// - getBranches  → فروع
-// - getRooms     → الغرف (نفسها لكل الفروع - global)
-// - getPlaces    → indoor / outdoor places per branch
-// - getGames     → الألعاب (global)
-// - getOffers    → العروض / البانرز
-
-
 // ---------- GET /getBranches ----------
 export const getBranches = functions.https.onRequest(async (req, res) => {
   res.set("Access-Control-Allow-Origin", "*");
@@ -426,18 +400,6 @@ export const getOffers = functions.https.onRequest(async (req, res) => {
 
 
 // =====================[ PAYMENTS & NOTIFICATIONS – Rahma ]=====================
-
-
-// ---------- POST /uploadPaymentProof ----------
-// body:
-// {
-//   "user_id": "user_123",
-//   "booking_ids": ["b_1", "b_2"],
-//   "method": "vodafone" | "instapay",
-//   "payer_phone": "0100...",
-//   "amount": 150,
-//   "screenshot_url": "https://..."
-// }
 
 export const uploadPaymentProof = functions.https.onRequest(async (req, res) => {
   res.set("Access-Control-Allow-Origin", "*");
