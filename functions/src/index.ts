@@ -13,6 +13,40 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
+// ===============[ Notification templates helper ]===============
+// بنجيب نص النوتيفيكيشن من collection اسمها "notification" (templates)
+// ونسجّل نوتيفيكيشن حقيقية في "notifications"
+
+async function createNotificationFromTemplate(
+  userId: string,
+  type: string,            // نفس اسم الـ document في collection notification
+  extraData: any = {}      // booking_ids, reject_reason, ... إلخ
+) {
+  try {
+    const templateSnap = await db.collection("notification").doc(type).get();
+
+    if (!templateSnap.exists) {
+      console.warn(`Notification template not found for type: ${type}`);
+      return;
+    }
+
+    const t = templateSnap.data() as any;
+
+    await db.collection("notifications").add({
+      user_id: userId,
+      type,
+      title_en: t.title_en || "",
+      title_ar: t.title_ar || "",
+      body_en: t.body_en || "",
+      body_ar: t.body_ar || "",
+      is_read: false,
+      created_at: new Date().toISOString(),
+      ...extraData,
+    });
+  } catch (err) {
+    console.error("createNotificationFromTemplate error:", err);
+  }
+}
 
 // =====================[ BOOKING APIs – Hana ]=====================
 
@@ -124,7 +158,7 @@ export const checkout = functions.https.onRequest(async (req, res) => {
 
       const docRef = await db.collection("bookings").add({
         user_id,
-        type: item.type,             // room / place / ...
+        type: item.type, // room / place / ...
         branch_id: item.branch_id,
         place_id: item.place_id,
         date: item.date,
@@ -574,19 +608,12 @@ export const approvePaymentProof = functions.https.onRequest(async (req, res) =>
       });
     });
 
-    // 3) نعمل notification لليوزر
-    const notifRef = db.collection("notifications").doc();
-    batch.set(notifRef, {
-      user_id: userId,
-      type: "booking_confirmed",
-      title: "تم تأكيد حجزك ✅",
-      body: "تم مراجعة الدفع بالديبوزيت وتأكيد حجزك.",
-      booking_ids: bookingIds,
-      is_read: false,
-      created_at: new Date().toISOString(),
-    });
-
     await batch.commit();
+
+    // 3) نعمل notification لليوزر من التمبليت booking_confirmed
+    await createNotificationFromTemplate(userId, "booking_confirmed", {
+      booking_ids: bookingIds,
+    });
 
     res.status(200).json({
       success: true,
@@ -665,19 +692,13 @@ export const rejectPaymentProof = functions.https.onRequest(async (req, res) => 
       });
     });
 
-    // 3) notification لليوزر
-    const notifRef = db.collection("notifications").doc();
-    batch.set(notifRef, {
-      user_id: userId,
-      type: "payment_rejected",
-      title: "تم رفض إثبات الدفع ❌",
-      body: reason,
-      booking_ids: bookingIds,
-      is_read: false,
-      created_at: new Date().toISOString(),
-    });
-
     await batch.commit();
+
+    // 3) notification لليوزر من تمبليت payment_rejected
+    await createNotificationFromTemplate(userId, "payment_rejected", {
+      booking_ids: bookingIds,
+      reject_reason: reason,
+    });
 
     res.status(200).json({
       success: true,
