@@ -5,7 +5,10 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
 if (!admin.apps.length) {
-  admin.initializeApp();
+  admin.initializeApp({
+    // يخلي الـ Admin SDK يشتغل على نفس الـ project بتاع الـ emulator / Firebase
+    projectId: process.env.GCLOUD_PROJECT,
+  });
 }
 
 const db = admin.firestore();
