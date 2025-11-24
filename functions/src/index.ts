@@ -114,12 +114,17 @@ export const checkout = functions.https.onRequest(async (req, res) => {
     const bookings: any[] = [];
 
     for (const item of items) {
-      // 🔹 سعر مؤقت ثابت (ممكن يتعدل بعدين حسب place/room/game)
+      // 🛑 games للعرض بس → متتحجزش
+      if (item.type === "game") {
+        continue;
+      }
+
+      // 🔹 سعر مؤقت ثابت (ممكن يتعدل بعدين حسب place/room)
       const price = 200;
 
       const docRef = await db.collection("bookings").add({
         user_id,
-        type: item.type,
+        type: item.type,             // room / place / ...
         branch_id: item.branch_id,
         place_id: item.place_id,
         date: item.date,
@@ -201,6 +206,7 @@ export const getMyBookings = functions.https.onRequest(async (req, res) => {
 
 
 // =====================[ DATA APIs – Mariam ]=====================
+
 // ---------- GET /getBranches ----------
 export const getBranches = functions.https.onRequest(async (req, res) => {
   res.set("Access-Control-Allow-Origin", "*");
@@ -323,7 +329,7 @@ export const getPlaces = functions.https.onRequest(async (req, res) => {
 
 
 // ---------- GET /getGames ----------
-// global games (نفسها لكل الفروع)
+// global games (نفسها لكل الفروع) – للعرض فقط
 export const getGames = functions.https.onRequest(async (req, res) => {
   res.set("Access-Control-Allow-Origin", "*");
 
